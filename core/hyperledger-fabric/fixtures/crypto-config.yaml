@@ -1,0 +1,16 @@
+OrdererOrgs:
+  - Name: MyCreditChain
+    Domain: mycreditchain.io
+    Specs:
+    - Hostname: orderer0
+    - Hostname: orderer1
+    - Hostname: orderer2
+PeerOrgs:
+  - Name: Org1MyCreditChain
+    Domain: org1.mycreditchain.io
+    Specs:
+    - Hostname: peer0
+    - Hostname: peer1
+    - Hostname: peer2
+    Users:
+      Count: 1

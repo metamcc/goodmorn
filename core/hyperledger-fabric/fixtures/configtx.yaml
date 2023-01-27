@@ -1,0 +1,53 @@
+Profiles:
+    MyCreditChain:
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *MyCreditChain
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *Org1MyCreditChain        
+        Consortium: SampleConsortium
+        Consortiums:
+            SampleConsortium:
+                Organizations:
+                    - *MyCreditChain
+                    - *Org1MyCreditChain
+
+Organizations:
+    - &MyCreditChain
+        Name: MyCreditChain
+        ID: mycreditchain.io
+        AdminPrincipal: Role.ADMIN
+        MSPDir: crypto-config/ordererOrganizations/mycreditchain.io/msp
+
+    - &Org1MyCreditChain
+        Name: MyCreditChainOrganization1
+        ID: org1.mycreditchain.io
+        AdminPrincipal: Role.ADMIN
+        MSPDir: crypto-config/peerOrganizations/org1.mycreditchain.io/msp
+        AnchorPeers:
+        - Host: peer0.org1.mycreditchain.io
+          Port: 7051
+
+Orderer: &OrdererDefaults
+    OrdererType: kafka
+    Addresses:
+        - orderer0.mycreditchain.io:7050
+        - orderer1.mycreditchain.io:7050
+        - orderer2.mycreditchain.io:7050
+    BatchTimeout: 2s
+    BatchSize:
+          MaxMessageCount: 1
+          AbsoluteMaxBytes: 99 MB
+          PreferredMaxBytes: 512 KB
+    Kafka:
+          Brokers:
+              - kafka0.mycreditchain.io:9092
+              - kafka1.mycreditchain.io:9092
+              - kafka2.mycreditchain.io:9092
+    Organizations:
+
+Application: &ApplicationDefaults
+    Organizations:

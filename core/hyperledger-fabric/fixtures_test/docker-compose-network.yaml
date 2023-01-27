@@ -1,0 +1,359 @@
+version: '3.5'
+
+networks:
+  default:
+    external:
+      name: mynet
+
+services:
+
+  zookeeper0-org0:
+    image: hyperledger/fabric-zookeeper
+    container_name: zookeeper0-org0
+    hostname: zookeeper0-org0
+    environment:
+      - ZOO_MY_ID=1
+      - ZOO_SERVERS=server.1=zookeeper0-org0:2888:3888 server.2=zookeeper1-org0:2888:3888 server.3=zookeeper2-org0:2888:3888
+    ports:
+      - 2181:2181
+      - 2888:2888
+      - 3888:3888
+    networks:
+      default:
+    restart: always
+
+  zookeeper1-org0:
+    image: hyperledger/fabric-zookeeper
+    container_name: zookeeper1-org0
+    hostname: zookeeper1-org0
+    environment:
+      - ZOO_MY_ID=2
+      - ZOO_SERVERS=server.1=zookeeper0-org0:2888:3888 server.2=zookeeper1-org0:2888:3888 server.3=zookeeper2-org0:2888:3888
+    ports:
+      - 2182:2181
+      - 2889:2888
+      - 3889:3888
+    networks:
+      default:
+    restart: always
+
+  zookeeper2-org0:
+    image: hyperledger/fabric-zookeeper
+    container_name: zookeeper2-org0
+    hostname: zookeeper2-org0
+    environment:
+      - ZOO_MY_ID=3
+      - ZOO_SERVERS=server.1=zookeeper0-org0:2888:3888 server.2=zookeeper1-org0:2888:3888 server.3=zookeeper2-org0:2888:3888
+    ports:
+      - 2183:2181
+      - 2890:2888
+      - 3890:3888
+    networks:
+      default:
+    restart: always
+
+  kafka0-org0:
+    image: hyperledger/fabric-kafka
+    container_name: kafka0-org0
+    hostname: kafka0-org0
+    environment:
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0-org0:2181,zookeeper1-org0:2181,zookeeper2-org0:2181
+      - KAFKA_BROKER_ID=0
+    ports:
+      - 9092:9092
+    networks:
+      default:
+    restart: always
+
+  kafka1-org0:
+    image: hyperledger/fabric-kafka
+    container_name: kafka1-org0
+    hostname: kafka1-org0
+    environment:
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0-org0:2181,zookeeper1-org0:2181,zookeeper2-org0:2181
+      - KAFKA_BROKER_ID=1
+    ports:
+      - 9093:9092
+    networks:
+      default:
+    restart: always
+
+  kafka2-org0:
+    image: hyperledger/fabric-kafka
+    container_name: kafka2-org0
+    hostname: kafka2-org0
+    environment:
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0-org0:2181,zookeeper1-org0:2181,zookeeper2-org0:2181
+      - KAFKA_BROKER_ID=2
+    ports:
+      - 9094:9092
+    networks:
+      default:
+    restart: always
+
+  orderer0-org0:
+    image: hyperledger/fabric-orderer:x86_64-1.1.0
+    container_name: orderer0-org0
+    hostname: orderer0-org0
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=debug
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_GENESISPROFILE=mcc
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/msp/keystore/key.crt
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/msp/tlscerts/cert.pem
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/msp/cacerts/ica-org0-7054.pem]
+      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
+      - ORDERER_KAFAK_RETRY_SHORTTOTAL=30s
+      - ORDERER_KAFKA_VERBOSE=true
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=mynet
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+      - ${PWD}/channel-artifacts/orderer.genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ${PWD}/data/org0/orderer0-org0/msp:/var/hyperledger/orderer/msp
+    ports:
+      - 7050:7050
+    networks:
+      default:
+    restart: always
+
+  orderer1-org0:
+    image: hyperledger/fabric-orderer:x86_64-1.1.0
+    container_name: orderer1-org0
+    hostname: orderer1-org0
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=debug
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_GENESISPROFILE=mcc
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/msp/keystore/key.crt
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/msp/tlscerts/cert.pem
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/msp/cacerts/ica-org0-7054.pem]
+      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
+      - ORDERER_KAFAK_RETRY_SHORTTOTAL=30s
+      - ORDERER_KAFKA_VERBOSE=true
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=mynet
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+      - ${PWD}/channel-artifacts/orderer.genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ${PWD}/data/org0/orderer1-org0/msp:/var/hyperledger/orderer/msp
+    ports:
+      - 8050:7050
+    networks:
+      default:
+    restart: always
+
+  orderer2-org0:
+    image: hyperledger/fabric-orderer:x86_64-1.1.0
+    container_name: orderer2-org0
+    hostname: orderer2-org0
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=debug
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_GENESISPROFILE=mcc
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/msp/keystore/key.crt
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/msp/tlscerts/cert.pem
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/msp/cacerts/ica-org0-7054.pem]
+      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
+      - ORDERER_KAFAK_RETRY_SHORTTOTAL=30s
+      - ORDERER_KAFKA_VERBOSE=true
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=mynet
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+      - ${PWD}/channel-artifacts/orderer.genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ${PWD}/data/org0/orderer2-org0/msp:/var/hyperledger/orderer/msp
+    ports:
+      - 9050:7050
+    networks:
+      default:
+    restart: always
+  
+  couchdb0-org1:
+    image: hyperledger/fabric-couchdb
+    container_name: couchdb0-org1
+    hostname: couchdb0-org1
+    ports:
+      - 5984:5984
+    networks:
+      default:
+    restart: always
+
+  peer0-org1:
+    image: hyperledger/fabric-peer:x86_64-1.1.0
+    container_name: peer0-org1
+    hostname: peer0-org1
+    environment:
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=mynet
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_ID=peer0-org1
+      - CORE_PEER_ADDRESS=peer0-org1:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0-org1:7051
+      - CORE_PEER_LOCALMSPIDorg1
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb0-org1:5984
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0-org1:7051
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/msp/tlscerts/cert.pem
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/msp/keystore/key.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/msp/cacerts/ica-org1-7054.pem
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/org1/admin-org1/msp
+      - PATH=$PATH:/opt/gopath/src/github.com/hyperledger/fabric/peer/go/bin
+    depends_on:
+      - couchdb0-org1
+      - orderer0-org0
+      - orderer1-org0
+      - orderer2-org0
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - 7051:7051
+      - 7053:7053
+    volumes:
+      - /var/run/:/host/var/run/
+      - ${PWD}/data/org1/peer0-org1/msp:/etc/hyperledger/fabric/msp
+      - ${PWD}/data:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ${PWD}/channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+      - ${PWD}/chaincode/:/opt/gopath/src/github.com/chaincode
+    networks:
+      default:
+    restart: always
+
+  couchdb1-org1:
+    image: hyperledger/fabric-couchdb
+    container_name: couchdb1-org1
+    hostname: couchdb1-org1
+    ports:
+      - 5985:5984
+    networks:
+      default:
+    restart: always
+
+  peer1-org1:
+    image: hyperledger/fabric-peer:x86_64-1.1.0
+    container_name: peer1-org1
+    hostname: peer1-org1
+    environment:
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=mynet
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_ID=peer1-org1
+      - CORE_PEER_ADDRESS=peer1-org1:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1-org1:7051
+      - CORE_PEER_LOCALMSPIDorg1
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb1-org1:5984
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1-org1:7051
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/msp/tlscerts/cert.pem
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/msp/keystore/key.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/msp/cacerts/ica-org1-7054.pem
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/org1/admin-org1/msp
+      - PATH=$PATH:/opt/gopath/src/github.com/hyperledger/fabric/peer/go/bin
+    depends_on:
+      - couchdb0-org1
+      - orderer0-org0
+      - orderer1-org0
+      - orderer2-org0
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - 8051:7051
+      - 8053:7053
+    volumes:
+      - /var/run/:/host/var/run/
+      - ${PWD}/data/org1/peer1-org1/msp:/etc/hyperledger/fabric/msp
+      - ${PWD}/data:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ${PWD}/channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+      - ${PWD}/chaincode/:/opt/gopath/src/github.com/chaincode
+    networks:
+      default:
+    restart: always
+
+  couchdb2-org1:
+    image: hyperledger/fabric-couchdb
+    container_name: couchdb2-org1
+    hostname: couchdb2-org1
+    ports:
+      - 5986:5984
+    networks:
+      default:
+    restart: always
+
+  peer2-org1:
+    image: hyperledger/fabric-peer:x86_64-1.1.0
+    container_name: peer2-org1
+    hostname: peer2-org1
+    environment:
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=mynet
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_ID=peer2-org1
+      - CORE_PEER_ADDRESS=peer2-org1:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2-org1:7051
+      - CORE_PEER_LOCALMSPIDorg1
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb2-org1:5984
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer2-org1:7051
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/msp/tlscerts/cert.pem
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/msp/keystore/key.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/msp/cacerts/ica-org1-7054.pem
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/org1/admin-org1/msp
+      - PATH=$PATH:/opt/gopath/src/github.com/hyperledger/fabric/peer/go/bin
+    depends_on:
+      - couchdb0-org1
+      - orderer0-org0
+      - orderer1-org0
+      - orderer2-org0
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - 9051:7051
+      - 9053:7053
+    volumes:
+      - /var/run/:/host/var/run/
+      - ${PWD}/data/org1/peer2-org1/msp:/etc/hyperledger/fabric/msp
+      - ${PWD}/data:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ${PWD}/channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+      - ${PWD}/chaincode/:/opt/gopath/src/github.com/chaincode
+    networks:
+      default:
+    restart: always

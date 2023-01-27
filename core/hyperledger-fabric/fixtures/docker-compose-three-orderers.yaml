@@ -1,0 +1,277 @@
+version: '3.5'
+
+networks:
+  default:
+    name: mynet
+    driver: overlay
+    attachable: true
+
+services:
+
+  zookeeper0.mycreditchain.io:
+    image: hyperledger/fabric-zookeeper
+    container_name: zookeeper0.mycreditchain.io
+    hostname: zookeeper0.mycreditchain.io
+    environment:
+      - ZOO_MY_ID=1
+      - ZOO_SERVERS=server.1=zookeeper0.mycreditchain.io:2888:3888 server.2=zookeeper1.mycreditchain.io:2888:3888 server.3=zookeeper2.mycreditchain.io:2888:3888
+    networks:
+      default:
+    restart: always
+
+  zookeeper1.mycreditchain.io:
+    image: hyperledger/fabric-zookeeper
+    container_name: zookeeper1.mycreditchain.io
+    hostname: zookeeper1.mycreditchain.io
+    environment:
+      - ZOO_MY_ID=2
+      - ZOO_SERVERS=server.1=zookeeper0.mycreditchain.io:2888:3888 server.2=zookeeper1.mycreditchain.io:2888:3888 server.3=zookeeper2.mycreditchain.io:2888:3888
+    networks:
+      default:
+    restart: always
+  
+  zookeeper2.mycreditchain.io:
+    image: hyperledger/fabric-zookeeper
+    container_name: zookeeper2.mycreditchain.io
+    hostname: zookeeper2.mycreditchain.io
+    environment:
+      - ZOO_MY_ID=3
+      - ZOO_SERVERS=server.1=zookeeper0.mycreditchain.io:2888:3888 server.2=zookeeper1.mycreditchain.io:2888:3888 server.3=zookeeper2.mycreditchain.io:2888:3888
+    networks:
+      default:
+    restart: always
+
+  kafka0.mycreditchain.io:
+    image: hyperledger/fabric-kafka
+    container_name: kafka0.mycreditchain.io
+    hostname: kafka0.mycreditchain.io
+    environment:
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0.mycreditchain.io:2181,zookeeper1.mycreditchain.io:2181,zookeeper2.mycreditchain.io:2181
+      - KAFKA_BROKER_ID=0
+    depends_on:
+      - zookeeper0.mycreditchain.io
+      - zookeeper1.mycreditchain.io
+      - zookeeper2.mycreditchain.io
+    networks:
+      default:
+    restart: always
+
+  kafka1.mycreditchain.io:
+    image: hyperledger/fabric-kafka
+    container_name: kafka1.mycreditchain.io
+    hostname: kafka1.mycreditchain.io
+    environment:
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0.mycreditchain.io:2181,zookeeper1.mycreditchain.io:2181,zookeeper2.mycreditchain.io:2181
+      - KAFKA_BROKER_ID=1
+    depends_on:
+      - zookeeper0.mycreditchain.io
+      - zookeeper1.mycreditchain.io
+      - zookeeper2.mycreditchain.io
+    networks:
+      default:
+    restart: always
+
+  kafka2.mycreditchain.io:
+    image: hyperledger/fabric-kafka
+    container_name: kafka2.mycreditchain.io
+    hostname: kafka2.mycreditchain.io
+    environment:
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0.mycreditchain.io:2181,zookeeper1.mycreditchain.io:2181,zookeeper2.mycreditchain.io:2181
+      - KAFKA_BROKER_ID=2
+    depends_on:
+      - zookeeper0.mycreditchain.io
+      - zookeeper1.mycreditchain.io
+      - zookeeper2.mycreditchain.io
+    networks:
+      default:
+    restart: always
+
+  orderer0.mycreditchain.io:
+    image: hyperledger/fabric-orderer:x86_64-1.1.0
+    container_name: orderer0.mycreditchain.io
+    hostname: orderer0.mycreditchain.io
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=debug
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_GENESISPROFILE=mcc
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=mycreditchain.io
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
+      - ORDERER_KAFAK_RETRY_SHORTTOTAL=30s
+      - ORDERER_KAFKA_VERBOSE=true
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=mynet
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+      - ${PWD}/channel-artifacts/orderer.genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ${PWD}/crypto-config/ordererOrganizations/mycreditchain.io/orderers/orderer0.mycreditchain.io/msp:/var/hyperledger/orderer/msp
+      - ${PWD}/crypto-config/ordererOrganizations/mycreditchain.io/orderers/orderer0.mycreditchain.io/tls/:/var/hyperledger/orderer/tls
+    ports:
+      - 7050:7050
+    networks:
+      default:
+    restart: always
+  
+  orderer1.mycreditchain.io:
+    image: hyperledger/fabric-orderer:x86_64-1.1.0
+    container_name: orderer1.mycreditchain.io
+    hostname: orderer1.mycreditchain.io
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=debug
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_GENESISPROFILE=mcc
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=mycreditchain.io
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
+      - ORDERER_KAFAK_RETRY_SHORTTOTAL=30s
+      - ORDERER_KAFKA_VERBOSE=true
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=mynet
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+      - ${PWD}/channel-artifacts/orderer.genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ${PWD}/crypto-config/ordererOrganizations/mycreditchain.io/orderers/orderer1.mycreditchain.io/msp:/var/hyperledger/orderer/msp
+      - ${PWD}/crypto-config/ordererOrganizations/mycreditchain.io/orderers/orderer1.mycreditchain.io/tls/:/var/hyperledger/orderer/tls
+    ports:
+      - 8050:7050
+    networks:
+      default:
+    restart: always
+
+  orderer2.mycreditchain.io:
+    image: hyperledger/fabric-orderer:x86_64-1.1.0
+    container_name: orderer2.mycreditchain.io
+    hostname: orderer2.mycreditchain.io
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=debug
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_GENESISPROFILE=mcc
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=mycreditchain.io
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
+      - ORDERER_KAFAK_RETRY_SHORTTOTAL=30s
+      - ORDERER_KAFKA_VERBOSE=true
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=mynet
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+      - ${PWD}/channel-artifacts/orderer.genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ${PWD}/crypto-config/ordererOrganizations/mycreditchain.io/orderers/orderer2.mycreditchain.io/msp:/var/hyperledger/orderer/msp
+      - ${PWD}/crypto-config/ordererOrganizations/mycreditchain.io/orderers/orderer2.mycreditchain.io/tls/:/var/hyperledger/orderer/tls
+    ports:
+      - 9050:7050
+    networks:
+      default:
+    restart: always
+
+  couchdb0.mycreditchain.io:
+    image: hyperledger/fabric-couchdb
+    container_name: couchdb0.mycreditchain.io
+    hostname: couchdb0.mycreditchain.io
+    networks:
+      default:
+    restart: always
+
+  peer0.org1.mycreditchain.io:
+    image: hyperledger/fabric-peer:x86_64-1.1.0
+    container_name: peer0.org1.mycreditchain.io
+    hostname: peer0.org1.mycreditchain.io
+    environment:
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=mynet
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer0.org1.mycreditchain.io
+      - CORE_PEER_ADDRESS=peer0.org1.mycreditchain.io:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.mycreditchain.io:7051
+      - CORE_PEER_LOCALMSPID=org1.mycreditchain.io
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb0.mycreditchain.io:5984
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.mycreditchain.io:7051
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.mycreditchain.io/peers/peer0.org1.mycreditchain.io/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.mycreditchain.io/peers/peer0.org1.mycreditchain.io/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.mycreditchain.io/peers/peer0.org1.mycreditchain.io/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.mycreditchain.io/users/Admin@org1.mycreditchain.io/msp
+      - PATH=$PATH:/opt/gopath/src/github.com/hyperledger/fabric/peer/go/bin
+    depends_on:
+      - couchdb0.mycreditchain.io
+      - orderer0.mycreditchain.io
+      - orderer1.mycreditchain.io
+      - orderer2.mycreditchain.io
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - 7051:7051
+      - 7053:7053
+    volumes:
+      - /var/run/:/host/var/run/
+      - ${PWD}/crypto-config/peerOrganizations/org1.mycreditchain.io/peers/peer0.org1.mycreditchain.io/msp:/etc/hyperledger/fabric/msp
+      - ${PWD}/crypto-config/peerOrganizations/org1.mycreditchain.io/peers/peer0.org1.mycreditchain.io/tls:/etc/hyperledger/fabric/tls
+      - ${PWD}/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ${PWD}/channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    networks:
+      default:
+    restart: always
+
+  ca.org1.mycreditchain.io:
+    image: hyperledger/fabric-ca:x86_64-1.1.0
+    container_name: ca.org1.mycreditchain.io
+    hostname: ca.org1.mycreditchain.io
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.org1.mycreditchain.io
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org1.mycreditchain.io-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/b3aad535df2e3cd89972cee9a2e8f7dd973990f330874fea4cb99aad3ff49d07_sk
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org1.mycreditchain.io-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/b3aad535df2e3cd89972cee9a2e8f7dd973990f330874fea4cb99aad3ff49d07_sk
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=mynet
+    ports:
+      - 7054:7054
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/org1.mycreditchain.io/ca/:/etc/hyperledger/fabric-ca-server-config
+    networks:
+      default:
+    restart: always
+ 
