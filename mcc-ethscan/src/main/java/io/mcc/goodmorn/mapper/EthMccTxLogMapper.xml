@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Tue Jun 14 16:55:27 KST 2016-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.mcc.goodmorn.mapper.EthMccTxLogMapper">
+
+    <select id="getLastBlockNumber" resultType="long">
+        SELECT blockNumber FROM t_eth_mcctx_log
+        <where>
+            <if test="wallet != null">
+                (fromAddr=#{wallet} OR toAddr=#{wallet})
+            </if>
+        </where>
+        ORDER BY blockNumber DESC Limit 1
+    </select>
+
+    <select id="getTransLog" resultType="io.mcc.common.entity.EthMccTxLog">
+        SELECT * FROM t_eth_mcctx_log
+          WHERE fromAddr=#{fromAddr} and toAddr=#{toAddr}
+          ORDER BY blockNumber ASC
+    </select>
+    <select id="getTransLogByMap" parameterType="CommonVO" resultType="io.mcc.common.entity.EthMccTxLog">
+        SELECT * FROM t_eth_mcctx_log
+        WHERE fromAddr=#{fromAddr} and toAddr=#{toAddr}
+            <if test="timeStamp!=null and !timeStamp.equals('')">
+                <![CDATA[
+                AND timeStamp >= #{timeStamp}
+                ]]>
+            </if>
+            <if test="xchgFruit!=null and !xchgFruit.equals('')">
+                  AND xchgFruit = #{xchgFruit}
+            </if>
+          ORDER BY blockNumber ASC
+
+    </select>
+    <select id="getTransactionLog" resultType="io.mcc.common.entity.EthMccTxLog">
+        SELECT * FROM t_eth_mcctx_log where hash = #{hash}
+    </select>
+
+    <select id="countLog" parameterType="io.mcc.common.entity.EthMccTxLog" resultType="int">
+        SELECT count(*) FROM t_eth_mcctx_log
+        where hash = #{hash} and blockNumber = #{blockNumber}
+    </select>
+
+    <insert id="insertLog" useGeneratedKeys="true" keyProperty="txSeq" parameterType="io.mcc.common.entity.EthMccTxLog">
+        <![CDATA[
+        insert into t_eth_mcctx_log
+        (hash, blockNumber, transactionIndex, fromAddr, toAddr, value, timeStamp, txInternal, gas, gasUsed, gasPrice, cumulativeGasUsed)
+        values(#{hash}, #{blockNumber}, #{transactionIndex}, #{from}, #{to}, #{value}, FROM_UNIXTIME(#{timeStamp}), #{txInternal},
+            #{gas}, #{gasUsed}, #{gasPrice}, #{cumulativeGasUsed})
+        ]]>
+    </insert>
+    <update id="setTransLogByM2FDone">
+        update t_eth_mcctx_log set xchgFruit = 'Y'
+        where hash = #{hash} and blockNumber = #{blockNumber}
+
+    </update>
+
+    <!-- paging query for admin page -->
+
+    <select id="countMccTx" parameterType="CommonVO" resultType="int">
+        SELECT count(*) FROM t_eth_mcctx_log
+        <where>
+            <if test="txSeq != null">
+                and txSeq=#{txSeq}
+            </if>
+            <if test="hash != null">
+                and hash=#{hash}
+            </if>
+            <if test="blockNumber != null">
+                and blockNumber=#{blockNumber}
+            </if>
+            <if test="transactionIndex != null">
+                and transactionIndex=#{transactionIndex}
+            </if>
+            <if test="wallet != null">
+                and (fromAddr=#{wallet} or toAddr=#{wallet})
+            </if>
+            <if test='targetDate != null'>
+            <![CDATA[
+			and regist_dt >= str_to_date(#{targetDate}, '%Y%m%d%H%i%s') and regist_dt < DATE_ADD(str_to_date(#{targetDate}, '%Y%m%d%H%i%s'), INTERVAL 1 DAY)
+			]]>
+            </if>
+        </where>
+    </select>
+
+    <select id="findMccTx" parameterType="CommonVO" resultType="io.mcc.common.entity.EthMccTxLog">
+        SELECT txSeq, hash, blockNumber, transactionIndex, fromAddr, toAddr, value, DATE_FORMAT(timeStamp, '%Y-%m-%d %H:%i:%s') as txTime ,
+              txInternal, xchgFruit, gas, gasUsed, gasPrice, cumulativeGasUsed
+        FROM t_eth_mcctx_log
+        <where>
+            <if test="txSeq != null">
+                and txSeq=#{txSeq}
+            </if>
+            <if test="hash != null">
+                and hash=#{hash}
+            </if>
+            <if test="blockNumber != null">
+                and blockNumber=#{blockNumber}
+            </if>
+            <if test="transactionIndex != null">
+                and transactionIndex=#{transactionIndex}
+            </if>
+            <if test="wallet != null">
+                and (fromAddr=#{wallet} or toAddr=#{wallet})
+            </if>
+            <if test='targetDate != null'>
+            <![CDATA[
+			and timeStamp >= str_to_date(#{targetDate}, '%Y%m%d%H%i%s') and timeStamp < DATE_ADD(str_to_date(#{targetDate}, '%Y%m%d%H%i%s'), INTERVAL 1 DAY)
+			]]>
+            </if>
+			<if test="startblock != null and endblock != null">
+                and blockNumber between #{startblock} and #{endblock}
+            </if>
+        </where>
+        ORDER By blockNumber
+        <choose>
+            <when test="orderBy eq 'asc'">ASC</when>
+            <otherwise>DESC</otherwise>
+        </choose>
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+
+    </select>
+
+    <select id="getMaxTxSEQ" resultType="long">
+        SELECT MAX(txSEQ) FROM t_eth_mcctx_log
+    </select>
+
+</mapper>
