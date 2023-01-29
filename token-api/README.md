@@ -6,16 +6,20 @@
 **1. Collect Ether MCC tx**
 - Collect ERC20 MCC transaction using API provided by Etherscan.io
 
-**Klaytn MCC tx gethering**
+**2. Collect Klaytn MCC tx**
+- Collect KIP7 MCC transaction using API provided by KAS(klaytn api service)
 
-**Klaytn MCCX tx gethering**
+**3. Collect Klaytn MCCX tx**
+- Collect KIP7 MCCX transaction using API provided by KAS(klaytn api service)
 
-**ERC20 MCC exchange MCCX**
+**4. Exchange ERC20 MCC to MCCX**
 
-**Klaytn MCC exchange MCCX**
+**5. Exchange KIP7 MCC to MCCX**
 
-**MCCX export/import**
+**6. MCCX export to user wallet**
 
-**Fruit to MCCX sync**
+**7. Exchange MCCX to Fruit**
+
+**8. Fruit to MCCX sync**
 
 
