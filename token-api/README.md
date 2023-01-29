@@ -21,5 +21,6 @@
 **7. Exchange MCCX to Fruit**
 
 **8. Fruit to MCCX sync**
-
+-  DAD(Daily AirDrop) 
+-  Fruit transaction (transfer, export, payment)
 
