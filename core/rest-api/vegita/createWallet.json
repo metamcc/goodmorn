@@ -1,0 +1,6 @@
+{   
+    "ccId": "mycreditchain-service",
+    "ccFnc": "createMCCWallet",
+    "param1": "bb",
+    "identity":"fd"
+  }
