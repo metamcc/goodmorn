@@ -1,0 +1,243 @@
+# github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78
+## explicit
+github.com/Azure/go-ansiterm
+github.com/Azure/go-ansiterm/winterm
+# github.com/BurntSushi/toml v0.3.1
+## explicit
+github.com/BurntSushi/toml
+# github.com/Microsoft/go-winio v0.4.12
+## explicit
+github.com/Microsoft/go-winio
+# github.com/Microsoft/hcsshim v0.8.7-0.20190417211021-672e52e9209d
+## explicit
+github.com/Microsoft/hcsshim/osversion
+# github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5
+## explicit
+github.com/Nvveen/Gotty
+# github.com/containerd/continuity v0.0.0-20190426062206-aaeac12a7ffc
+## explicit
+github.com/containerd/continuity/pathdriver
+# github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible
+## explicit
+github.com/docker/distribution/registry/api/errcode
+# github.com/docker/docker v17.12.0-ce-rc1.0.20190515185722-34b56728ed71+incompatible
+## explicit
+github.com/docker/docker/api/types
+github.com/docker/docker/api/types/blkiodev
+github.com/docker/docker/api/types/container
+github.com/docker/docker/api/types/filters
+github.com/docker/docker/api/types/mount
+github.com/docker/docker/api/types/network
+github.com/docker/docker/api/types/registry
+github.com/docker/docker/api/types/strslice
+github.com/docker/docker/api/types/swarm
+github.com/docker/docker/api/types/swarm/runtime
+github.com/docker/docker/api/types/versions
+github.com/docker/docker/errdefs
+github.com/docker/docker/opts
+github.com/docker/docker/pkg/fileutils
+github.com/docker/docker/pkg/homedir
+github.com/docker/docker/pkg/idtools
+github.com/docker/docker/pkg/ioutils
+github.com/docker/docker/pkg/longpath
+github.com/docker/docker/pkg/mount
+github.com/docker/docker/pkg/pools
+github.com/docker/docker/pkg/stdcopy
+github.com/docker/docker/pkg/system
+# github.com/docker/go-connections v0.4.0
+## explicit
+github.com/docker/go-connections/nat
+# github.com/docker/go-units v0.3.3
+## explicit
+github.com/docker/go-units
+# github.com/docker/libnetwork v0.8.0-dev.2.0.20190423152150-9ff9b57c344d
+## explicit
+github.com/docker/libnetwork/ipamutils
+# github.com/fsouza/go-dockerclient v1.3.0
+## explicit
+github.com/fsouza/go-dockerclient
+github.com/fsouza/go-dockerclient/internal/archive
+github.com/fsouza/go-dockerclient/internal/jsonmessage
+github.com/fsouza/go-dockerclient/internal/term
+# github.com/gogo/protobuf v1.2.1
+## explicit
+github.com/gogo/protobuf/proto
+# github.com/golang/lint v0.0.0-20180702182130-06c8688daad7
+## explicit
+# github.com/golang/protobuf v1.3.1
+## explicit
+github.com/golang/protobuf/proto
+github.com/golang/protobuf/ptypes
+github.com/golang/protobuf/ptypes/any
+github.com/golang/protobuf/ptypes/duration
+github.com/golang/protobuf/ptypes/empty
+github.com/golang/protobuf/ptypes/timestamp
+# github.com/grpc-ecosystem/go-grpc-middleware v1.0.0
+## explicit
+github.com/grpc-ecosystem/go-grpc-middleware
+# github.com/hyperledger/fabric v1.4.1
+## explicit
+github.com/hyperledger/fabric/bccsp
+github.com/hyperledger/fabric/bccsp/factory
+github.com/hyperledger/fabric/bccsp/idemix
+github.com/hyperledger/fabric/bccsp/idemix/bridge
+github.com/hyperledger/fabric/bccsp/idemix/handlers
+github.com/hyperledger/fabric/bccsp/pkcs11
+github.com/hyperledger/fabric/bccsp/signer
+github.com/hyperledger/fabric/bccsp/sw
+github.com/hyperledger/fabric/bccsp/utils
+github.com/hyperledger/fabric/common/crypto
+github.com/hyperledger/fabric/common/flogging
+github.com/hyperledger/fabric/common/flogging/fabenc
+github.com/hyperledger/fabric/common/ledger
+github.com/hyperledger/fabric/common/metadata
+github.com/hyperledger/fabric/common/metrics
+github.com/hyperledger/fabric/common/semaphore
+github.com/hyperledger/fabric/common/util
+github.com/hyperledger/fabric/core/chaincode/platforms
+github.com/hyperledger/fabric/core/chaincode/platforms/ccmetadata
+github.com/hyperledger/fabric/core/chaincode/shim
+github.com/hyperledger/fabric/core/comm
+github.com/hyperledger/fabric/core/config
+github.com/hyperledger/fabric/core/container/util
+github.com/hyperledger/fabric/idemix
+github.com/hyperledger/fabric/msp
+github.com/hyperledger/fabric/protos/common
+github.com/hyperledger/fabric/protos/ledger/queryresult
+github.com/hyperledger/fabric/protos/ledger/rwset
+github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset
+github.com/hyperledger/fabric/protos/msp
+github.com/hyperledger/fabric/protos/peer
+github.com/hyperledger/fabric/protos/token
+github.com/hyperledger/fabric/protos/utils
+# github.com/hyperledger/fabric-amcl v0.0.0-20181230093703-5ccba6eab8d6
+## explicit
+github.com/hyperledger/fabric-amcl/amcl
+github.com/hyperledger/fabric-amcl/amcl/FP256BN
+# github.com/konsorten/go-windows-terminal-sequences v1.0.2
+## explicit
+github.com/konsorten/go-windows-terminal-sequences
+# github.com/kr/pretty v0.1.0
+## explicit
+github.com/kr/pretty
+# github.com/kr/text v0.1.0
+## explicit
+github.com/kr/text
+# github.com/magiconair/properties v1.8.1
+## explicit
+github.com/magiconair/properties
+# github.com/miekg/pkcs11 v1.0.3-0.20190429190417-a667d056470f
+## explicit
+github.com/miekg/pkcs11
+# github.com/mitchellh/mapstructure v1.1.2
+## explicit
+github.com/mitchellh/mapstructure
+# github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
+## explicit
+github.com/op/go-logging
+# github.com/opencontainers/go-digest v1.0.0-rc1
+## explicit
+github.com/opencontainers/go-digest
+# github.com/opencontainers/image-spec v1.0.1
+## explicit
+github.com/opencontainers/image-spec/specs-go
+github.com/opencontainers/image-spec/specs-go/v1
+# github.com/opencontainers/runc v1.0.0-rc8
+## explicit
+github.com/opencontainers/runc/libcontainer/user
+# github.com/pkg/errors v0.8.1
+## explicit
+github.com/pkg/errors
+# github.com/sirupsen/logrus v1.4.1
+## explicit
+github.com/sirupsen/logrus
+# github.com/spf13/cast v1.3.0
+## explicit
+github.com/spf13/cast
+# github.com/spf13/jwalterweatherman v1.1.0
+## explicit
+github.com/spf13/jwalterweatherman
+# github.com/spf13/pflag v1.0.3
+## explicit
+github.com/spf13/pflag
+# github.com/spf13/viper v0.0.0-20150908122457-1967d93db724
+## explicit
+github.com/spf13/viper
+# github.com/sykesm/zap-logfmt v0.0.2
+## explicit
+github.com/sykesm/zap-logfmt
+# go.uber.org/atomic v1.3.2
+go.uber.org/atomic
+# go.uber.org/multierr v1.1.0
+## explicit
+go.uber.org/multierr
+# go.uber.org/zap v1.10.0
+## explicit
+go.uber.org/zap
+go.uber.org/zap/buffer
+go.uber.org/zap/internal/bufferpool
+go.uber.org/zap/internal/color
+go.uber.org/zap/internal/exit
+go.uber.org/zap/zapcore
+go.uber.org/zap/zapgrpc
+# golang.org/x/crypto v0.0.0-20190513172903-22d7a77e9e5f
+## explicit
+golang.org/x/crypto/sha3
+# golang.org/x/net v0.0.0-20190514140710-3ec191127204
+## explicit
+golang.org/x/net/context
+golang.org/x/net/http/httpguts
+golang.org/x/net/http2
+golang.org/x/net/http2/hpack
+golang.org/x/net/idna
+golang.org/x/net/internal/timeseries
+golang.org/x/net/trace
+# golang.org/x/sys v0.0.0-20190516110030-61b9204099cb
+## explicit
+golang.org/x/sys/cpu
+golang.org/x/sys/unix
+golang.org/x/sys/windows
+# golang.org/x/text v0.3.2
+## explicit
+golang.org/x/text/secure/bidirule
+golang.org/x/text/transform
+golang.org/x/text/unicode/bidi
+golang.org/x/text/unicode/norm
+# google.golang.org/genproto v0.0.0-20190516172635-bb713bdc0e52
+## explicit
+google.golang.org/genproto/googleapis/rpc/status
+# google.golang.org/grpc v1.19.0
+google.golang.org/grpc
+google.golang.org/grpc/balancer
+google.golang.org/grpc/balancer/base
+google.golang.org/grpc/balancer/roundrobin
+google.golang.org/grpc/binarylog/grpc_binarylog_v1
+google.golang.org/grpc/codes
+google.golang.org/grpc/connectivity
+google.golang.org/grpc/credentials
+google.golang.org/grpc/credentials/internal
+google.golang.org/grpc/encoding
+google.golang.org/grpc/encoding/proto
+google.golang.org/grpc/grpclog
+google.golang.org/grpc/internal
+google.golang.org/grpc/internal/backoff
+google.golang.org/grpc/internal/binarylog
+google.golang.org/grpc/internal/channelz
+google.golang.org/grpc/internal/envconfig
+google.golang.org/grpc/internal/grpcrand
+google.golang.org/grpc/internal/grpcsync
+google.golang.org/grpc/internal/syscall
+google.golang.org/grpc/internal/transport
+google.golang.org/grpc/keepalive
+google.golang.org/grpc/metadata
+google.golang.org/grpc/naming
+google.golang.org/grpc/peer
+google.golang.org/grpc/resolver
+google.golang.org/grpc/resolver/dns
+google.golang.org/grpc/resolver/passthrough
+google.golang.org/grpc/stats
+google.golang.org/grpc/status
+google.golang.org/grpc/tap
+# gopkg.in/yaml.v2 v2.2.2
+## explicit
+gopkg.in/yaml.v2
