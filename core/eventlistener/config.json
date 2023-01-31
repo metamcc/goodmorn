@@ -1,0 +1,28 @@
+{
+  "server": {
+    "dev": {
+      "kafka": [
+        "hfbn1.mycreditchain.io",
+        "hfbn2.mycreditchain.io",
+        "hfbn3.mycreditchain.io"
+      ],
+	  "ledgerClient": "config_dev_m.yaml"
+    },
+    "local": {
+      "kafka": [
+        "172.17.8.11",
+        "172.17.8.12",
+        "172.17.8.13"
+      ],
+	  "ledgerClient": "config_local_m.yaml"
+    },
+    "fingerCloud": {
+      "kafka": [
+	 "kafka1.internal-mycreditchain.io",
+         "kafka2.internal.mycreditchain.io",
+	 "kafka3.internal.mycreditchain.io"
+      ],
+	  "ledgerClient": "config_finger_cloud_m.yaml"
+    }
+  }
+}
