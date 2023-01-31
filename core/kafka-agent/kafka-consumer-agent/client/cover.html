@@ -1,0 +1,826 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/mycreditchain/kafka-agent/kafka-consumer-agent/client/kafka-agent-client-helper.go (50.4%)</option>
+				
+				<option value="file1">github.com/mycreditchain/kafka-agent/kafka-consumer-agent/client/kafka-agent-client.go (19.7%)</option>
+				
+				<option value="file2">github.com/mycreditchain/kafka-agent/kafka-consumer-agent/client/kafka-agent.go (24.5%)</option>
+				
+				<option value="file3">github.com/mycreditchain/kafka-agent/kafka-consumer-agent/client/resp-handler.go (100.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package client
+
+import (
+        "bytes"
+        "crypto/rand"
+        "encoding/json"
+        "errors"
+        "fmt"
+        "io/ioutil"
+        "net"
+        "net/http"
+        "net/url"
+        "strconv"
+        "time"
+
+        "github.com/mycreditchain/common/msg"
+)
+
+func startTimer(ka *KafkaAgentClient, svc string) <span class="cov0" title="0">{
+        MsgLogger.Println("***", svc, "Timer is started", ka.SvcList[svc].MessageTimer)
+        for </span><span class="cov0" title="0">{
+                select </span>{
+                case &lt;-ka.SvcList[svc].MessageTimer.C:<span class="cov0" title="0">
+                        svcNum, err := strconv.ParseFloat(svc, 64)
+                        if err != nil </span><span class="cov0" title="0">{
+                                MsgLogger.Println(svc, "Failed to convert svc string to number", err)
+                        }</span>
+                        <span class="cov0" title="0">req := map[string]interface{}{
+                                "svc":                     svcNum,
+                                PRODUCER_FIELD_CNT_INFO:   map[string]interface{}{},
+                                MESSAGE_TOPIC:             "batch-resp",
+                                REST_REQUEST_FIELD_METHOD: "POST",
+                                REST_REQUEST_FIELD_URL:    "test",
+                        } // 해당 svc 종류에 따라 req 형식 변경 작업 필요
+                        iter := ka.SvcList[svc].RedisClient.Scan(0, fmt.Sprintf("svc_%s_*", svc), ka.SvcList[svc].RedisClient.DBSize().Val()).Iterator()
+                        ka.flushMessages(req, iter)
+                        batchTimeout := int(ka.AgentConfig["batch_svc_list"].(map[string]interface{})[svc].(map[string]interface{})["btcCycle"].(float64))
+                        ka.SvcList[svc].MessageTimer.Reset(time.Second * time.Duration(batchTimeout))
+                        MsgLogger.Println("***", svc, "Timer is reseted by time expiration", time.Now())</span>
+                }
+        }
+}
+
+func parseMessage(value []byte) (map[string]interface{}, error) <span class="cov8" title="1">{
+        reqData := map[string]interface{}{}
+        err := json.Unmarshal(value, &amp;reqData)
+        if val, ok := reqData["id"]; ok </span><span class="cov8" title="1">{
+                reqData["id"] = val.(string)
+        }</span> else<span class="cov8" title="1"> {
+                reqData["id"] = fmt.Sprintf("%v", time.Now().UnixNano())
+        }</span>
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                MsgLogger.Println("Failed to parse message", err, reqData)
+                return nil, errors.New("Parsed request data is not valid")
+        }</span>
+        <span class="cov8" title="1">if err == nil </span><span class="cov8" title="1">{
+                for _, reqParam := range []string{REST_REQUEST_FIELD_PARAMETER, REST_REQUEST_FIELD_METHOD, REST_REQUEST_FIELD_URL} </span><span class="cov8" title="1">{
+                        if _, ok := reqData[reqParam]; !ok </span><span class="cov8" title="1">{
+                                err = errors.New("Parsed request data is not valid")
+                                MsgLogger.Println("Failed to parse message", err, reqData)
+                                return nil, err
+                        }</span>
+                }
+        }
+
+        <span class="cov8" title="1">if _, ok := reqData["svc"]; !ok </span><span class="cov8" title="1">{
+                err = errors.New("Parsed request data is not valid")
+                MsgLogger.Println("Failed to parse message", err, reqData)
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">return reqData, nil</span>
+}
+
+func createMultipleRequest(messages []string) (request map[string]interface{}, err error) <span class="cov8" title="1">{
+        messageStructs := []map[string]interface{}{}
+        //        for i := 0; i &lt; len(messages)-1; i++ {
+        for i := 0; i &lt; len(messages); i++ </span><span class="cov8" title="1">{
+                messageMap := make(map[string]interface{})
+                err := json.Unmarshal([]byte(messages[i]), &amp;messageMap)
+                if err != nil </span><span class="cov8" title="1">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">parameters := messageMap[REST_REQUEST_FIELD_PARAMETER].(map[string]interface{})
+
+                messageStructs = append(messageStructs, parameters)</span>
+        }
+
+        <span class="cov8" title="1">request = map[string]interface{}{}
+        for i, messageStruct := range messageStructs </span><span class="cov8" title="1">{
+                for k, v := range messageStruct </span><span class="cov8" title="1">{
+                        vs := v.(string)
+                        if val, ok := request[k]; ok </span><span class="cov8" title="1">{
+                                request[k] = val.(string) + vs
+                        }</span> else<span class="cov8" title="1"> {
+                                request[k] = vs
+                        }</span>
+                }
+                <span class="cov8" title="1">if i &lt; len(messageStructs)-1 </span><span class="cov8" title="1">{
+                        for k, _ := range messageStruct </span><span class="cov8" title="1">{
+                                request[k] = request[k].(string) + SEPARATOR
+                        }</span>
+                }
+        }
+        <span class="cov8" title="1">request["refId"] = randToken()
+        request["date"] = time.Now().Format("2006-01-02 15:04:05")
+        request["separator"] = SEPARATOR
+        MsgLogger.Printf("request: %+v\n", request)
+
+        return request, nil</span>
+}
+
+func randToken() string <span class="cov8" title="1">{
+        b := make([]byte, 8)
+        rand.Read(b)
+        return fmt.Sprintf("%x", b)
+}</span>
+
+func getRestServerResp(reqData, agentConfig map[string]interface{}, topic string) (map[string]interface{}, error, HandlerReturn) <span class="cov0" title="0">{
+        restResp, err := callRestServer(reqData, topic)
+        if err == nil </span><span class="cov0" title="0">{
+                if _, ok := restResp[PRODUCER_FIELD_CODE]; !ok </span><span class="cov0" title="0">{
+                        return nil, errors.New("Response Code is not valid"), errorHandler(msg.GetErrMsgStruct(err, ERR_CODE_QUEUE_REST_SERVER_RESPONSE), reqData["id"].(string), agentConfig[TOPIC_RESPONSE].(string))
+                }</span>
+        }
+
+        <span class="cov0" title="0">respCode := restResp[CODE].(string)
+
+        _, ok := reqData[PRODUCER_FIELD_CNT_INFO]
+        if !ok || reqData[PRODUCER_FIELD_CNT_INFO].(map[string]interface{})["resp_code"].(string) != respCode </span><span class="cov0" title="0">{
+                reqData[PRODUCER_FIELD_CNT_INFO] = map[string]interface{}{
+                        "resp_code": respCode,
+                        "count":     0,
+                }
+        }</span>
+
+        <span class="cov0" title="0">count := int(reqData[PRODUCER_FIELD_CNT_INFO].(map[string]interface{})["count"].(float64))
+        if err != nil </span><span class="cov0" title="0">{
+                // 에러가 timeout 등의 net 에러라면 재시도로 처리
+                if isErrorForRetry(err) </span><span class="cov0" title="0">{
+                        retryMax := int(agentConfig["retry_config"].(map[string]interface{})["NET_ERROR"].(map[string]interface{})["rtyMCnt"].(float64))
+                        if count &lt; retryMax </span><span class="cov0" title="0">{
+                                return nil, err, retryHandler(reqData, agentConfig)
+                        }</span> else<span class="cov0" title="0"> {
+                                return nil, err, failureHandler(reqData, agentConfig)
+                        }</span>
+                } else<span class="cov0" title="0"> {
+                        // 그 외 에러시 에러로 카프카 브로커에 응답 입력
+                        MsgLogger.Println("Failed to call restful api", err)
+                        return nil, err, errorHandler(msg.GetErrMsgStruct(err, ERR_CODE_QUEUE_REST_SERVER_RESPONSE), reqData["id"].(string), agentConfig[TOPIC_RESPONSE].(string))
+                }</span>
+        }
+
+        <span class="cov0" title="0">return restResp, nil, nil</span>
+}
+
+// callRestServer: reqData 파라미터를 기반으로 parameter, url, method등을
+// 맵에서 추출한 뒤 그 정보에 맞는 restful server를 호출하고 응답을
+// 받아 리턴하는 함수
+func callRestServer(reqData map[string]interface{}, topic string) (map[string]interface{}, error) <span class="cov0" title="0">{
+        inputData := reqData[REST_REQUEST_FIELD_PARAMETER].(map[string]interface{})
+        inputData["procType"] = topic
+        MsgLogger.Printf("req data: %+v\n", reqData)
+
+        params := url.Values{}
+        for k, v := range inputData </span><span class="cov0" title="0">{
+                switch v.(type) </span>{
+                case float64:<span class="cov0" title="0">
+                        params.Add(k, fmt.Sprintf("%d", int(v.(float64))))</span>
+                case string:<span class="cov0" title="0">
+                        params.Add(k, v.(string))</span>
+                }
+        }
+        /*
+                inputDataJson, err := json.Marshal(inputData)
+                if err != nil {
+                        MsgLogger.Println("Failed to marshal data to json")
+                        return nil, err
+                }
+
+                req, err := http.NewRequest(reqData[REST_REQUEST_FIELD_METHOD].(string), RESTFUL_URL+reqData[REST_REQUEST_FIELD_URL].(string), bytes.NewBuffer(inputDataJson))
+        */
+        <span class="cov0" title="0">req, err := http.NewRequest(reqData[REST_REQUEST_FIELD_METHOD].(string), RESTFUL_URL+reqData[REST_REQUEST_FIELD_URL].(string), bytes.NewBufferString(params.Encode()))
+        if err != nil </span><span class="cov0" title="0">{
+                MsgLogger.Println("Failed to create http request", err)
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">req.Close = true
+
+        req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+        client := &amp;http.Client{}
+        resp, err := client.Do(req)
+        MsgLogger.Printf("[restful response] : %+v\n", resp)
+        if err != nil </span><span class="cov0" title="0">{
+                MsgLogger.Println("Failed to get http response", err)
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">body, err := ioutil.ReadAll(resp.Body)
+        MsgLogger.Printf("[restful response body]: %+v\n", string(body))
+        if err != nil </span><span class="cov0" title="0">{
+                MsgLogger.Println("Failed to read http response", err)
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">var restResp map[string]interface{}
+        err = json.Unmarshal(body, &amp;restResp)
+        MsgLogger.Printf("[restful response json]: %+v\n", restResp)
+        if err != nil </span><span class="cov0" title="0">{
+                MsgLogger.Println("Failed to parse http response", err)
+                // 파싱 에러시 에러 메시지와 함께 받은 응답을 리턴
+                return nil, fmt.Errorf("error: %s, response body: %s\n", err.Error(), string(body))
+        }</span>
+
+        <span class="cov0" title="0">resp.Body.Close()
+        return restResp, nil</span>
+}
+
+func isErrorForRetry(err error) bool <span class="cov8" title="1">{
+        // timeout, connection refused
+        if _, ok := err.(net.Error); ok </span><span class="cov8" title="1">{
+                return true
+        }</span>
+
+        <span class="cov8" title="1">return false</span>
+}
+
+func handleRestServerResp(reqData, restResp, agentConfig map[string]interface{}) HandlerReturn <span class="cov8" title="1">{
+        countInfo := reqData[PRODUCER_FIELD_CNT_INFO].(map[string]interface{})
+        respCode := restResp[PRODUCER_FIELD_CODE].(string)
+        // 토픽이 request일 경우 restful 요청 후 성공이면 처리 종료
+        if respCode == SUCCESS_CODE_RESPONSE </span><span class="cov8" title="1">{
+                if _, ok := restResp[REF_ID]; !ok </span><span class="cov8" title="1">{
+                        return respHandler("Eventlistener Process", reqData)
+                }</span>
+        }
+
+        <span class="cov8" title="1">if respCode == agentConfig[RESULT_CODE_RETRY].(string) </span><span class="cov8" title="1">{
+                retryMax := int(agentConfig["retry_config"].(map[string]interface{})[countInfo["resp_code"].(string)].(map[string]interface{})["rtyMCnt"].(float64))
+                // 들어온 응답 코드가 재시도면
+                if int(countInfo["count"].(float64)) &lt; retryMax </span><span class="cov8" title="1">{
+                        // 재시도 최대 회수보다 적을 경우 다시 재시도로 응답 설정
+                        return retryHandler(reqData, agentConfig)
+                }</span> else<span class="cov8" title="1"> {
+                        // 재시도 최대 회수를 초과할 경우 실패로 응답 설정
+                        restResp["svc"] = reqData["svc"]
+                        restResp[PRODUCER_FIELD_CNT_INFO] = countInfo
+                        return failureHandler(restResp, agentConfig)
+                }</span>
+        }
+
+        // 재시도 코드가 아니면 응답 토픽으로 설정
+        <span class="cov8" title="1">restResp["svc"] = reqData["svc"]
+        restResp[PRODUCER_FIELD_CNT_INFO] = countInfo
+        restResp["type"] = reqData["type"]
+
+        // 카프카 브로커에 설정된 응답을 입력
+        return respHandler(agentConfig[TOPIC_RESPONSE].(string), restResp)</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package client
+
+import (
+        "encoding/json"
+        "fmt"
+        "sort"
+        "strconv"
+        "strings"
+        "time"
+
+        "github.com/Shopify/sarama"
+        "github.com/go-redis/redis"
+        "github.com/mycreditchain/common/msg"
+)
+
+const (
+        SEPARATOR     = "!"
+        SEED_GIFT_SVC = 2
+        MESSAGE_TOPIC = "message-topic"
+)
+
+type KafkaAgentClient struct {
+        AgentConfig map[string]interface{}
+        SvcList     map[string]*Svc
+        Producer    sarama.SyncProducer
+        //ConsumerGroup    sarama.ConsumerGroup
+}
+
+type Svc struct {
+        MessageTimer *time.Timer
+        RedisClient  *redis.Client
+        TimerPipe    chan struct{}
+}
+
+func (ka *KafkaAgentClient) Setup(_ sarama.ConsumerGroupSession) error <span class="cov0" title="0">{
+        ka.SvcList = make(map[string]*Svc)
+        MsgLogger.Println("beginning", time.Now())
+
+        //defer ka.MessageTimer.Stop()
+        for svc, svcConfig := range ka.AgentConfig["batch_svc_list"].(map[string]interface{}) </span><span class="cov0" title="0">{
+                svcNum, err := strconv.ParseFloat(svc, 64)
+                if err != nil </span><span class="cov0" title="0">{
+                        MsgLogger.Println(svc, "Failed to convert svc string to number", err)
+                }</span>
+
+                <span class="cov0" title="0">rClient := redis.NewClient(&amp;redis.Options{
+                        Addr:     "172.17.8.11:6379",
+                        Password: "",
+                        DB:       int(svcNum),
+                })
+                _, err = rClient.Ping().Result()
+                if err != nil </span><span class="cov0" title="0">{
+                        MsgLogger.Println(svc, "Failed to start redis DB:", err)
+                }</span>
+
+                <span class="cov0" title="0">ka.SvcList[svc] = &amp;Svc{
+                        MessageTimer: time.NewTimer(time.Second * time.Duration(int(svcConfig.(map[string]interface{})["btcCycle"].(float64)))),
+                        RedisClient:  rClient,
+                        TimerPipe:    make(chan struct{}),
+                }
+
+                go func(kc *KafkaAgentClient, svc string) </span><span class="cov0" title="0">{
+                        startTimer(kc, svc)
+                }</span>(ka, svc)
+        }
+
+        // db에 미처 전송 못한 메시지가 있으면 리스트를 돌면서 처리
+        <span class="cov0" title="0">for svc, svcConfig := range ka.AgentConfig["batch_svc_list"].(map[string]interface{}) </span><span class="cov0" title="0">{
+                svcNum, err := strconv.ParseFloat(svc, 64)
+                if err != nil </span><span class="cov0" title="0">{
+                        MsgLogger.Println(svc, "Failed to convert svc string to number", err)
+                }</span>
+                <span class="cov0" title="0">req := map[string]interface{}{
+                        "svc":                     svcNum,
+                        PRODUCER_FIELD_CNT_INFO:   map[string]interface{}{},
+                        MESSAGE_TOPIC:             "batch-resp",
+                        REST_REQUEST_FIELD_METHOD: "POST",
+                        REST_REQUEST_FIELD_URL:    svcConfig.(map[string]interface{})["batch_msg_url"].(string),
+                } // 해당 svc 종류에 따라 req 형식 변경 작업 필요
+                iter := ka.SvcList[svc].RedisClient.Scan(0, "svc_"+svc+"_*", ka.SvcList[svc].RedisClient.DBSize().Val()).Iterator()
+                ka.flushMessages(req, iter)</span>
+        }
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (*KafkaAgentClient) Cleanup(_ sarama.ConsumerGroupSession) error <span class="cov0" title="0">{ return nil }</span>
+
+// ConsumeClaim: 들어오는 메시지마다 go routine을 생성하여
+// 메시지를 파싱하고 restful을 호출하여 응답을 받아
+// 카프카에 응답 또는 재시도 토픽에 맞추어 입력하는 함수
+func (ka *KafkaAgentClient) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error <span class="cov0" title="0">{
+        for message := range claim.Messages() </span><span class="cov0" title="0">{
+                MsgLogger.Printf("Message topic:%q partition:%d offset:%d\n", message.Topic, message.Partition, message.Offset)
+                sess.MarkMessage(message, "")
+
+                // 1. 해당 토픽에 들어온 메시지 파싱 단계
+                reqData, err := parseMessage(message.Value)
+                if err != nil </span><span class="cov0" title="0">{
+                        MsgLogger.Println("Failed to parse queue message", err, reqData)
+                        // 파싱 에러시 카프카에 에러로 카프카 브로커에 응답 입력
+                        ka.RespToKafka(errorHandler(msg.GetErrMsgStruct(err, ERR_CODE_QUEUE_MSG_PARSE), reqData["id"].(string), ka.AgentConfig[TOPIC_RESPONSE].(string)))
+                }</span>
+                <span class="cov0" title="0">svc := fmt.Sprintf("%d", int(reqData["svc"].(float64)))
+                batchSvcConfig, ok := ka.AgentConfig["batch_svc_list"].(map[string]interface{})[svc]
+                go func() </span><span class="cov0" title="0">{
+                        reqData[MESSAGE_TOPIC] = message.Topic
+                        if strings.Contains(message.Topic, "config") </span><span class="cov0" title="0">{
+                                ka.ManageConfig(reqData)
+                        }</span> else<span class="cov0" title="0"> if strings.Contains(message.Topic, "batch-req") &amp;&amp; ok </span><span class="cov0" title="0">{
+                                ka.ManageMultipleMessages(reqData, batchSvcConfig.(map[string]interface{}))
+                        }</span> else<span class="cov0" title="0"> {
+                                ka.ManageMessage(reqData)
+                        }</span>
+                }()
+                <span class="cov0" title="0">if ok </span><span class="cov0" title="0">{
+                        ka.SvcList[svc].TimerPipe &lt;- struct{}{}
+                }</span>
+        }
+        <span class="cov0" title="0">MsgLogger.Printf("Processed all messages")
+        return nil</span>
+}
+
+func (ka *KafkaAgentClient) ManageMultipleMessages(req, batchSvcConfig map[string]interface{}) <span class="cov0" title="0">{
+        svc := fmt.Sprintf("%d", int(req["svc"].(float64)))
+        reqJson, err := json.Marshal(req)
+        if err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov0" title="0">msgCount := int(ka.SvcList[svc].RedisClient.DBSize().Val())
+        err = ka.SvcList[svc].RedisClient.Set(fmt.Sprintf("svc_%s_%d", svc, msgCount), string(reqJson), 0).Err()
+        if err != nil </span><span class="cov0" title="0">{
+                MsgLogger.Printf("Seting key, value in redis DB is failed")
+                return
+        }</span>
+        <span class="cov0" title="0">msgCount += 1
+        if msgCount == int(batchSvcConfig["btcMCnt"].(float64)) </span><span class="cov0" title="0">{
+                iter := ka.SvcList[svc].RedisClient.Scan(0, "svc_"+svc+"_*", ka.SvcList[svc].RedisClient.DBSize().Val()).Iterator()
+                ka.flushMessages(req, iter)
+        }</span>
+        <span class="cov0" title="0">ka.SvcList[svc].MessageTimer.Reset(time.Second * time.Duration(int(batchSvcConfig["btcCycle"].(float64))))
+        MsgLogger.Println("***", svc, "Timer is reseted by messaging term", time.Now())
+        &lt;-ka.SvcList[svc].TimerPipe</span>
+}
+
+func (ka *KafkaAgentClient) flushMessages(req map[string]interface{}, iter *redis.ScanIterator) <span class="cov0" title="0">{
+        svc := fmt.Sprintf("%d", int(req["svc"].(float64)))
+        var keys, msgs []string
+        for iter.Next() </span><span class="cov0" title="0">{
+                keys = append(keys, iter.Val())
+        }</span>
+        <span class="cov0" title="0">sort.Strings(keys)
+        for _, key := range keys </span><span class="cov0" title="0">{
+                val, err := ka.SvcList[svc].RedisClient.Get(key).Result()
+                if err != nil </span><span class="cov0" title="0">{
+                        MsgLogger.Println("redis get error:", err)
+                }</span>
+                <span class="cov0" title="0">msgs = append(msgs, val)</span>
+        }
+        <span class="cov0" title="0">_, err := ka.SvcList[fmt.Sprintf("%d", int(req["svc"].(float64)))].RedisClient.FlushDB().Result()
+        if err != nil </span><span class="cov0" title="0">{
+                MsgLogger.Println("redis flush err:", err)
+        }</span>
+        <span class="cov0" title="0">if len(msgs) == 0 </span><span class="cov0" title="0">{
+                MsgLogger.Println("no messages to create multiple message")
+                return
+        }</span>
+        <span class="cov0" title="0">reqData, err := createMultipleRequest(msgs)
+        if err != nil </span><span class="cov0" title="0">{
+                // telegram message
+                MsgLogger.Println("creating multiple message is failed:", err)
+                return
+        }</span>
+        <span class="cov0" title="0">req[REST_REQUEST_FIELD_PARAMETER] = reqData
+        ka.ManageMessage(req)</span>
+}
+
+func (ka *KafkaAgentClient) ManageMessage(reqData map[string]interface{}) <span class="cov0" title="0">{
+        // 2. 메시지를 파싱하여 얻은 정보를 토대로 restful server를 호출하는 단계
+        restResp, err, handler := getRestServerResp(reqData, ka.AgentConfig, reqData[MESSAGE_TOPIC].(string))
+        if err != nil </span><span class="cov0" title="0">{
+                ka.RespToKafka(handler)
+                return
+        }</span>
+
+        // 3. restful server에서 온 응답을 처리하는 단계
+        <span class="cov0" title="0">handler = handleRestServerResp(reqData, restResp, ka.AgentConfig)
+        if handler != nil </span><span class="cov0" title="0">{
+                ka.RespToKafka(handler)
+        }</span>
+}
+
+func (ka *KafkaAgentClient) ManageConfig(reqData map[string]interface{}) <span class="cov8" title="1">{
+        param := reqData[REST_REQUEST_FIELD_PARAMETER].(map[string]interface{})
+        if int(reqData["svc"].(float64)) == 81 </span><span class="cov8" title="1">{
+                retryConfig := ka.AgentConfig["retry_config"].(map[string]interface{})
+                if val, ok := retryConfig[param["retryCode"].(string)]; ok </span><span class="cov8" title="1">{
+                        rtyCycle, err := strconv.ParseFloat(param["rtyCycle"].(string), 64)
+                        if err != nil </span><span class="cov8" title="1">{
+                                MsgLogger.Println("Failed to convert string to float64", err)
+                        }</span>
+                        <span class="cov8" title="1">val.(map[string]interface{})["rtyCycle"] = rtyCycle
+                        rtyMCnt, err := strconv.ParseFloat(param["rtyMCnt"].(string), 64)
+                        if err != nil </span><span class="cov8" title="1">{
+                                MsgLogger.Println("Failed to convert string to int", err)
+                        }</span>
+                        <span class="cov8" title="1">val.(map[string]interface{})["rtyMCnt"] = rtyMCnt</span>
+                }
+                <span class="cov8" title="1">return</span>
+        }
+        <span class="cov8" title="1">if int(reqData["svc"].(float64)) == 82 </span><span class="cov8" title="1">{
+                batchSvcListConfig := ka.AgentConfig["batch_svc_list"].(map[string]interface{})
+                if val, ok := batchSvcListConfig[param["btcCode"].(string)]; ok </span><span class="cov8" title="1">{
+                        btcCycle, err := strconv.Atoi(param["btcCycle"].(string))
+                        if err != nil </span><span class="cov8" title="1">{
+                                MsgLogger.Println("Failed to convert string to int", err)
+                        }</span>
+                        <span class="cov8" title="1">val.(map[string]interface{})["btcCycle"] = btcCycle
+                        btcMCnt, err := strconv.Atoi(param["btcMCnt"].(string))
+                        if err != nil </span><span class="cov8" title="1">{
+                                MsgLogger.Println("Failed to convert string to int", err)
+                        }</span>
+                        <span class="cov8" title="1">val.(map[string]interface{})["btcMCnt"] = btcMCnt</span>
+                }
+                <span class="cov8" title="1">return</span>
+        }
+}
+
+// RespToKafka: KafkaAgentClient에서 설정된 producer를 통해 kafka에 메시지를 입력하는 함수
+func (ka *KafkaAgentClient) RespToKafka(hr HandlerReturn) error <span class="cov0" title="0">{
+        topic, value := hr()
+        valueJson, err := json.Marshal(value)
+        if err != nil </span><span class="cov0" title="0">{
+                MsgLogger.Println("Failed to make json", err)
+                return err
+        }</span>
+        <span class="cov0" title="0">if topic == "Eventlistener Process" </span><span class="cov0" title="0">{
+                MsgLogger.Println("Eventlistener processed request:", value)
+                return nil
+        }</span>
+
+        <span class="cov0" title="0">time.Sleep(time.Duration(ka.AgentConfig["retry_config"].(map[string]interface{})[value[CODE].(string)].(map[string]interface{})["retryCycle"].(float64)) * time.Second)
+
+        partition, offset, err := ka.Producer.SendMessage(
+                &amp;sarama.ProducerMessage{
+                        Topic: topic,
+                        Value: sarama.StringEncoder(valueJson),
+                })
+        if err != nil </span><span class="cov0" title="0">{
+                MsgLogger.Println("Failed to put the message to kafka", err)
+                return err
+        }</span>
+
+        <span class="cov0" title="0">MsgLogger.Printf("Message is stored in topic(%s)/partition(%d)/offset(%d)\n\n", topic, partition, offset)
+
+        return nil</span>
+}
+
+/*
+func (ka *KafkaAgentClient) Close() {
+        if err := ka.Producer.Close(); err != nil {
+                MsgLogger.Fatalln("Failed to close producer", err)
+        }
+        if err := ka.ConsumerGroup.Close(); err != nil {
+                MsgLogger.Fatalln("Failed to close consumer group", err)
+        }
+}
+*/
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package client
+
+import (
+        "context"
+        "crypto/tls"
+        "crypto/x509"
+        "encoding/json"
+        "io/ioutil"
+        "log"
+        "os"
+
+        "github.com/Shopify/sarama"
+
+        "gopkg.in/natefinch/lumberjack.v2"
+)
+
+var (
+        MsgLogger *log.Logger
+)
+
+func NewMsgLogger(filePath, logPrefix string, isTest bool) (*log.Logger, error) <span class="cov8" title="1">{
+        if isTest </span><span class="cov8" title="1">{
+                return log.New(os.Stdout, "INFO: ", log.LstdFlags), nil
+        }</span>
+
+        <span class="cov0" title="0">logFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("error opening file: %v", err)
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">msgLog := log.New(logFile, "", log.Ldate|log.Ltime|log.Lshortfile)
+        msgLog.SetOutput(&amp;lumberjack.Logger{
+                Filename:   filePath,
+                MaxSize:    1, // megabytes after which new file is created
+                MaxBackups: 2, // number of backups
+                MaxAge:     1, //days
+                Compress:   true,
+        })
+        return msgLog, nil</span>
+}
+
+func NewSyncProducer(brokerList []string, config *sarama.Config) (sarama.SyncProducer, error) <span class="cov0" title="0">{
+        producer, err := sarama.NewSyncProducer(brokerList, config)
+        if err != nil </span><span class="cov0" title="0">{
+                MsgLogger.Println("Failed to start Sarama producer:", err)
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return producer, nil</span>
+}
+
+func NewConsumerGroup(groupName string, brokers []string, config *sarama.Config) (sarama.ConsumerGroup, error) <span class="cov0" title="0">{
+        cg, err := sarama.NewConsumerGroup(brokers, groupName, config)
+        if err != nil </span><span class="cov0" title="0">{
+                MsgLogger.Println("Failed to create consumer group", err)
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return cg, nil</span>
+}
+
+// CreateTLSConfiguration: 카프카 프로듀서 및 컨슈머 설정시 tls 옵션을 적용하는 config 구조체를 리턴
+func CreateTLSConfiguration(certFile, keyFile, caFile string, verifySSL bool) (tlsConfig *tls.Config) <span class="cov0" title="0">{
+        if certFile != "" &amp;&amp; keyFile != "" &amp;&amp; caFile != "" </span><span class="cov0" title="0">{
+                cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+                if err != nil </span><span class="cov0" title="0">{
+                        MsgLogger.Fatalln("Failed to get cert file", err)
+                }</span>
+
+                <span class="cov0" title="0">caCert, err := ioutil.ReadFile(caFile)
+                if err != nil </span><span class="cov0" title="0">{
+                        MsgLogger.Fatalln("Failed to get ca cert file", err)
+                }</span>
+
+                <span class="cov0" title="0">caCertPool := x509.NewCertPool()
+                caCertPool.AppendCertsFromPEM(caCert)
+
+                tlsConfig = &amp;tls.Config{
+                        Certificates:       []tls.Certificate{cert},
+                        RootCAs:            caCertPool,
+                        InsecureSkipVerify: verifySSL,
+                }</span>
+        }
+
+        <span class="cov0" title="0">return tlsConfig</span>
+}
+
+func ConsumeMessages(topics []string, consumerGroup sarama.ConsumerGroup, client *KafkaAgentClient) <span class="cov0" title="0">{
+        /*
+                ch := make(chan os.Signal, 1)
+                signal.Notify(ch, os.Interrupt)
+                go func(ka *KafkaAgentClient) {
+                        &lt;-ch
+                        ka.Close()
+                        close(ch)
+                }(client)
+        */
+
+        //defer client.Close()
+
+        go func() </span><span class="cov0" title="0">{
+                for err := range consumerGroup.Errors() </span><span class="cov0" title="0">{
+                        MsgLogger.Println("Failed to consume messages", err)
+                }</span>
+        }()
+
+        <span class="cov0" title="0">ctx := context.Background()
+        for </span><span class="cov0" title="0">{
+                err := consumerGroup.Consume(ctx, topics, client)
+                if err != nil </span><span class="cov0" title="0">{
+                        MsgLogger.Println("Failed to consume messages", err)
+                }</span>
+        }
+}
+
+// GetConfiguration: flag에서 설정한 mode에 따라
+// ~/workspace/go/src/github.com/mycreditchain/kafka-agent/kafka-consumer-agent/client/config.json
+// 에 설정된 config 값을 설정하여 구조체를 리턴
+func GetConfiguration(path, consumerMode string) map[string]interface{} <span class="cov8" title="1">{
+        if consumerMode != "normal" &amp;&amp; consumerMode != "batch" </span><span class="cov0" title="0">{
+                MsgLogger.Fatalln("the mode flag is wrong")
+        }</span>
+        <span class="cov8" title="1">configFile, err := os.Open(path)
+        if err != nil </span><span class="cov0" title="0">{
+                MsgLogger.Fatalln("Failed to load config file", err)
+        }</span>
+        <span class="cov8" title="1">MsgLogger.Println("Successfully Opened config.json")
+        defer configFile.Close()
+
+        config := make(map[string]interface{})
+        byteValue, err := ioutil.ReadAll(configFile)
+        if err != nil </span><span class="cov0" title="0">{
+                MsgLogger.Fatalln("Failed to read config file", err)
+        }</span>
+        <span class="cov8" title="1">err = json.Unmarshal(byteValue, &amp;config)
+        if err != nil </span><span class="cov0" title="0">{
+                MsgLogger.Fatalln("Failed to unmarshal config file", err)
+        }</span>
+        <span class="cov8" title="1">return config[consumerMode].(map[string]interface{})</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package client
+
+import (
+        "github.com/mycreditchain/common/msg"
+)
+
+type HandlerReturn func() (producerTopic string, producerReq map[string]interface{})
+
+func retryHandler(reqToProducer, kConfig map[string]interface{}) HandlerReturn <span class="cov8" title="1">{
+        reqToProducer["type"] = kConfig[TOPIC_RETRY].(string)
+        count := int(reqToProducer[PRODUCER_FIELD_CNT_INFO].(map[string]interface{})["count"].(float64))
+        reqToProducer[PRODUCER_FIELD_CNT_INFO].(map[string]interface{})["count"] = count + 1
+        //        reqToProducer["svc"] = reqData["svc"]
+
+        return func() (producerTopic string, producerReq map[string]interface{}) </span><span class="cov8" title="1">{
+                MsgLogger.Printf("request to producer: %+v\n", reqToProducer)
+                return kConfig[TOPIC_RETRY].(string), reqToProducer
+        }</span>
+}
+
+func failureHandler(reqToProducer, kConfig map[string]interface{}) HandlerReturn <span class="cov8" title="1">{
+        reqToProducer[PRODUCER_FIELD_CODE] = kConfig[RESULT_CODE_FAILURE].(string)
+        reqToProducer["type"] = kConfig[TOPIC_RETRY].(string)
+        //        reqToProducer["svc"] = reqData["svc"]
+
+        return respHandler(kConfig[TOPIC_RESPONSE].(string), reqToProducer)
+}</span>
+
+func respHandler(topic string, reqToProducer map[string]interface{}) HandlerReturn <span class="cov8" title="1">{
+        return func() (producerTopic string, producerReq map[string]interface{}) </span><span class="cov8" title="1">{
+                MsgLogger.Printf("request to producer: %+v\n", reqToProducer)
+                return topic, reqToProducer
+        }</span>
+}
+
+func errorHandler(errObj msg.CommonMsg, idVal, topic string) HandlerReturn <span class="cov8" title="1">{
+        reqToProducer := make(map[string]interface{})
+        reqToProducer["id"] = idVal
+        reqToProducer[PRODUCER_FIELD_CODE] = errObj.Code
+        reqToProducer[PRODUCER_FIELD_DESC] = errObj.Desc
+        reqToProducer[PRODUCER_FIELD_MESSAGE] = errObj.Message
+        return func() (producerTopic string, producerReq map[string]interface{}) </span><span class="cov8" title="1">{
+                MsgLogger.Printf("request to producer: %+v\n", reqToProducer)
+                return topic, reqToProducer
+        }</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
